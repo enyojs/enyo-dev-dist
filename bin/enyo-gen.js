@@ -4,8 +4,8 @@
 
 var
 	nom = require('nomnom'),
-	options = require('../lib/Generator/options'),
-	commands = require('../lib/Generator/commands');
+	options = require('../lib/enyo/options'),
+	commands = require('../lib/enyo/commands');
 
 nom
 	.script('enyo-gen | egen')
