@@ -1,6 +1,5 @@
 var getRiPlugin = require('./resolution-independence'),
-	usage = require('./usage'),
-	parseOptions = require('./parse-options');
+	usage = require('./usage');
 
 function LessPluginRi (options) {
 	this.options = options;
@@ -15,7 +14,7 @@ LessPluginRi.prototype = {
 		usage.printUsage();
 	},
 	setOptions: function (options) {
-		this.options = parseOptions(options);
+		this.options = options;
 	},
 	minVersion: [2, 0, 0]
 };
