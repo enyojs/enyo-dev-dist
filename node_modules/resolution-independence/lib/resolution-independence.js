@@ -25,6 +25,13 @@ module.exports = function (less) {
 		this.configure(opts);
 	}
 
+	// The set of properties that can have comma-separated values, some of which can be in pixel units
+	var csvProps = [
+		'background',
+		'background-size',
+		'background-position'
+	];
+
 	ResolutionIndependencePlugin.prototype = {
 
 		/**
@@ -130,36 +137,59 @@ module.exports = function (less) {
 		/*
 		* Hook into each rule node
 		*
-		* @private
+		* @param {Object} node - The current LESS node to parse.
+		* @public
 		*/
 		visitRule: function (node) {
-			var ruleNode = node && !node.inline && node.value,
-				stringValues;
+			var ruleNode = node && !node.inline && node.value;
+			this._currentPropName = node.name;
+			this.processRuleNode(ruleNode);
+		},
 
-			// The value(s) of a CSS function call
-			if (Array.isArray(ruleNode.args)) {
-				this.processRuleNodes(ruleNode.args);
-			}
-			// Directly set string values that have a number
-			else if (typeof ruleNode.value == 'string' && ruleNode.value.match(/\d+/g)) {
-				stringValues = ruleNode.value.match(/\S+/g) || [];
-				ruleNode.value = stringValues.map(this.parseValueString.bind(this)).join(' ');
-			}
-			// A single value
-			else {
-				this.updateNode(ruleNode);
+		/**
+		* Processes a LESS rule node for conversion.
+		*
+		* @param {Object} ruleNode - A LESS rule node we wish to parse and convert.
+		* @private
+		*/
+		processRuleNode: function (ruleNode) {
+			var parsedString = '',
+				isString = false,
+				csvStrings, idx;
+
+			if (Array.isArray(ruleNode.args)) { // The value(s) of a CSS function call
+				for (idx = 0; idx < ruleNode.args.length; idx++) {
+					this.updateNode(ruleNode.args[idx]);
+				}
+			} else { // Value(s) that are not parameters of a function call
+				isString = typeof ruleNode.value == 'string';
+				if (csvProps.indexOf(this._currentPropName) > -1 && isString) {
+					csvStrings = ruleNode.value.split(',');
+				}
+
+				if (csvStrings && csvStrings.length) { // Multiple sets of comma-separated string values
+					for (idx = 0; idx < csvStrings.length; idx++) {
+						parsedString += (parsedString ? ', ' : '') + this.parseString(ruleNode, csvStrings[idx]);
+					}
+				} else if (isString) { // Multiple string values
+					parsedString = this.parseString(ruleNode);
+				} else { // A single value object
+					this.updateNode(ruleNode);
+				}
+
+				if (parsedString) ruleNode.value = parsedString;
 			}
 		},
 
 		/**
 		* Processes an array of LESS rule nodes for conversion.
 		*
-		* @param {Array} ruleNodes - An array of LESS rule nodes we wish to parse and convert.
+		* @param {Object[]} ruleNodes - An array of LESS rule nodes we wish to parse and convert.
 		* @private
 		*/
 		processRuleNodes: function (ruleNodes) {
 			for (var idx = 0; idx < ruleNodes.length; idx++) {
-				this.updateNode(ruleNodes[idx]);
+				this.processRuleNode(ruleNodes[idx]);
 			}
 		},
 
@@ -192,6 +222,22 @@ module.exports = function (less) {
 					ruleNode.value = this.parseValueString(value);
 				}
 			}
+		},
+
+		/**
+		* Parses a string value (which might need to be parsed into individual values).
+		*
+		* @param {Object} ruleNode - The rule node we are currently examining and will convert.
+		* @param {String} [stringValues] - The optional set of string values; if not present, then
+		*	the node's value will be used.
+		* @return {String[]} The set of parsed and converted values.
+		* @private
+		*/
+		parseString: function (ruleNode, stringValues) {
+			var value = stringValues || ruleNode.value;
+			stringValues = value.match(/\d+[\.]?\d+[^\s\.!]*|[!]*[^\s!]+/g);
+
+			if (stringValues) return stringValues.map(this.parseValueString.bind(this)).join(' ');
 		},
 
 		/**
