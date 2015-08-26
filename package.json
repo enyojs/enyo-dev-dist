@@ -14,7 +14,8 @@
     "enyo": "./bin/enyo.js"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "./node_modules/.bin/mocha",
+    "postinstall": "node ./bin/upgrade.js"
   },
   "author": "Cole Davis <cole.davis@lge.com>",
   "maintainers": [
@@ -33,7 +34,6 @@
     "node": ">=0.12.2"
   },
   "dependencies": {
-    "md5": "^2.0.0",
     "archy": "^1.0.0",
     "array-uniq": "^1.0.2",
     "bluebird": "^2.9.33",
@@ -44,6 +44,7 @@
     "clone": "^1.0.2",
     "combine-source-map": "^0.6.1",
     "convert-source-map": "^1.1.0",
+    "d3": "^3.5.6",
     "defaults": "^1.0.2",
     "defined": "^1.0.0",
     "detective": "^4.0.1",
@@ -55,11 +56,14 @@
     "inquirer": "^0.8.5",
     "is-glob": "^2.0.0",
     "jade": "^1.11.0",
+    "jquery": "^2.1.4",
     "less": "^2.5.0",
+    "md5": "^2.0.0",
     "merge": "^1.2.0",
     "minimist": "^1.1.1",
     "nomnom": "^1.8.1",
     "osenv": "^0.1.2",
+    "promise-polyfill": "^2.1.0",
     "resolution-independence": "^0.0.3",
     "slash": "~1.0.0",
     "through2": "^0.6.3",
